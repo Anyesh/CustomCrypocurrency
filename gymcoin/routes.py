@@ -28,13 +28,16 @@ def transaction():
     #print("hi");
     if form.validate_on_submit():
         print("hi");
-        #print(form.sender.data, form.reciever.data, form.amount.data, form.key.data);
-        #print(type(form.key.data));
-        feedback = blockchainObj.addTransaction(form.sender.data, form.reciever.data, form.amount.data, form.key.data, form.key.data);
-        if feedback:
-            flash(f'Transaction Made!', 'success');
+        if feedback := blockchainObj.addTransaction(
+            form.sender.data,
+            form.reciever.data,
+            form.amount.data,
+            form.key.data,
+            form.key.data,
+        ):
+            flash('Transaction Made!', 'success');
         else:
-            flash(f'Error!', 'danger');
+            flash('Error!', 'danger');
         return render_template('transaction.html', title = "Transaction", blockchain = blockchainObj, form=form, formNL= formNL); 
 
     if formNL.validate_on_submit():
@@ -78,7 +81,7 @@ def login():
         if user and bcrypt.check_password_hash(user.password, form.password.data):
             login_user(user, remember=form.remember.data);
             nextPage = request.args.get('next');
-            flash(f'Welcome! You are now logged in', 'success');
+            flash('Welcome! You are now logged in', 'success');
             return redirect(nextPage) if nextPage else redirect(url_for('home'));
         else:
             flash('Login Unsuccessful. Please check email and password', 'danger');
@@ -119,7 +122,7 @@ def mine():
 def new_transaction():
     values = request.get_json();
     required = ['sender', 'reciever', 'amt']
-    if not all(k in values for k in required):
+    if any(k not in values for k in required):
         return 'Missing values', 400;
 
     index = blockchainObj.addTransaction(values['sender'], values['reciever'], values['amt'])
@@ -156,9 +159,7 @@ def register_nodes():
 
 @app.route('/nodes/resolve', methods=['GET'])
 def consensus():
-    replaced = blockchainObj.resolveConflicts()
-
-    if replaced:
+    if replaced := blockchainObj.resolveConflicts():
         response = {
             'message': 'Our chain was replaced',
             'new_chain': blockchainObj.chainJSONencode()

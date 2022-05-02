@@ -59,10 +59,8 @@ class Blockchain (object):
 		return self.chain[-1];
 
 	def addGenesisBlock(self):
-		t = [];
-		t.append(Transaction("me", "you", 10));
-		genesis = Block(t, "5");
-		return genesis;
+		t = [Transaction("me", "you", 10)];
+		return Block(t, "5");
 
 	def isValidChain(self):
 		for i in range(1, len(self.chain)):
@@ -103,15 +101,12 @@ class Block (object):
 		return hashlib.sha256(hash_encoded).hexdigest();
 
 	def mineBlock(self, difficulty):
-		arr = [];
-		for i in range(0, difficulty):
-			arr.append(i);
-		
+		arr = list(range(difficulty));
 		#compute until the beginning of the hash = 0123..difficulty
-		arrStr = map(str, arr);  
+		arrStr = map(str, arr);
 		hashPuzzle = ''.join(arrStr);
 		#print(len(hashPuzzle));
-		while self.hash[0:difficulty] != hashPuzzle:
+		while self.hash[:difficulty] != hashPuzzle:
 			self.nonse += 1;
 			self.hash = self.calculateHash();
 			#print(len(hashPuzzle));
@@ -119,10 +114,8 @@ class Block (object):
 		print("Block Mined!");
 
 	def hasValidTransactions(self):
-		for i in range(0, len(self.transactions)):
-			if not self.transactions[i].isValidTransaction():
-				return False;
-			return True;
+		for i in range(len(self.transactions)):
+			return bool(self.transactions[i].isValidTransaction())
 
 class Transaction (object):
 	def __init__(self, sender, reciever, amt):

@@ -111,10 +111,8 @@ class Blockchain (object):
 		return self.chain[-1];
 
 	def addGenesisBlock(self):
-		tArr = [];
-		tArr.append(Transaction("me", "you", 10));
-		genesis = Block(tArr, "5", 0);
-		return genesis;
+		tArr = [Transaction("me", "you", 10)];
+		return Block(tArr, "5", 0);
 
 	def isValidChain(self):
 		for i in range(1, len(self.chain)):
@@ -139,15 +137,6 @@ class Blockchain (object):
 
 		blockArrJSON = [];
 		for block in self.chain:
-			blockJSON = {};
-			blockJSON['hash'] = block.hash;
-			blockJSON['index'] = block.index;
-			blockJSON['prev'] = block.prev;
-			blockJSON['time'] = block.time;
-			blockJSON['nonse'] = block.nonse;
-			blockJSON['milf'] = block.milf;
-
-
 			transactionsJSON = [];
 			tJSON = {};
 			for transaction in block.transactions:
@@ -158,17 +147,24 @@ class Blockchain (object):
 				tJSON['hash'] = transaction.hash;
 				transactionsJSON.append(tJSON);
 
-			blockJSON['transactions'] = transactionsJSON;
-
+			blockJSON = {
+			    'hash': block.hash,
+			    'index': block.index,
+			    'prev': block.prev,
+			    'time': block.time,
+			    'nonse': block.nonse,
+			    'milf': block.milf,
+			    'transactions': transactionsJSON,
+			}
 			blockArrJSON.append(blockJSON);
 
 		return blockArrJSON;
 
 	def getBalance(self, person):
-		balance = 0; 
+		balance = 0;
 		for i in range(1, len(self.chain)):
 			block = self.chain[i];
-			for j in range(0, len(block.transactions)):
+			for j in range(len(block.transactions)):
 				transaction = block.transactions[j];
 				if(transaction.sender == person):
 					balance -= transaction.amt;
@@ -194,24 +190,20 @@ class Block (object):
 
 	def calculateHash(self):
 
-		hashTransactions = "";
+		hashTransactions = "".join(
+		    transaction.hash for transaction in self.transactions);
 
-		for transaction in self.transactions:
-			hashTransactions += transaction.hash;
 		hashString = str(self.time) + hashTransactions + self.milf + self.prev + str(self.nonse);
 		hashEncoded = json.dumps(hashString, sort_keys=True).encode();
 		return hashlib.sha256(hashEncoded).hexdigest();
 
 	def mineBlock(self, difficulty):
-		arr = [];
-		for i in range(0, difficulty):
-			arr.append(i);
-		
+		arr = list(range(difficulty));
 		#compute until the beginning of the hash = 0123..difficulty
-		arrStr = map(str, arr);  
+		arrStr = map(str, arr);
 		hashPuzzle = ''.join(arrStr);
 		#print(len(hashPuzzle));
-		while self.hash[0:difficulty] != hashPuzzle:
+		while self.hash[:difficulty] != hashPuzzle:
 			self.nonse += 1;
 			self.hash = self.calculateHash();
 			#print(len(hashPuzzle));
@@ -219,7 +211,7 @@ class Block (object):
 		print("Block Mined!");
 
 	def hasValidTransactions(self):
-		for i in range(0, len(self.transactions)):
+		for i in range(len(self.transactions)):
 			transaction = self.transactions[i];
 			if not transaction.isValidTransaction():
 				return False;
